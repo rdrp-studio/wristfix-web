@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="description" content="WRISTFIX shows your boat's instruments on your Wear OS watch: depth, wind, plotter with AIS, anchor alarm, autopilot control, engine, tanks and batteries. Works with NMEA 2000, NMEA 0183 and SignalK over WiFi.">
+<meta property="og:title" content="WRISTFIX · Your boat's instruments on your wrist">
+<meta property="og:description" content="Depth, wind, AIS, anchor alarm, autopilot and engine on your Wear OS watch.">
+<meta property="og:image" content="https://rdrp-studio.github.io/wristfix-web/img/og.jpg">
+<meta property="og:url" content="https://rdrp-studio.github.io/wristfix-web/">
+<meta property="og:type" content="website">
+<link rel="canonical" href="https://rdrp-studio.github.io/wristfix-web/">
+<link rel="icon" type="image/png" href="img/icon.png">
+<link rel="apple-touch-icon" href="img/icon.png">
+<title>WRISTFIX · Your boat's instruments on your wrist</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,600..900&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+  /* Noche en el mar, como el resto de webs de RDRP Studio. Acentos: cian de las conexiones WiFi del hero y naranja de la correa del reloj. */
+  *,*::before,*::after{box-sizing:border-box}
+  :root{
+    --night:#071a2c;
+    --deep:#0b2238;
+    --panel:#112b46;
+    --line:rgba(214,226,244,0.11);
+    --paper:#eef3fa;
+    --mute:#a6b6cc;
+    --dim:#71839f;
+    --cyan:#5adcff;
+    --orange:#ff7a1a;
+    --red:#ff5252;
+    --f-display:'Archivo','Arial Narrow',Arial,sans-serif;
+    --f-body:'Public Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+    --f-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+    color-scheme:dark;
+  }
+  [hidden]{display:none!important}
+  html{scroll-behavior:smooth;scroll-padding-top:76px}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  body{margin:0;background:var(--night);color:var(--paper);font-family:var(--f-body);font-size:16px;line-height:1.6;overflow-x:hidden}
+  h1,h2,h3{font-family:var(--f-display);font-stretch:85%;font-weight:800;line-height:1.08;margin:0;text-wrap:balance}
+  h2{font-size:clamp(28px,4vw,42px)}
+  h3{font-size:19px;font-weight:700;font-stretch:90%}
+  p{margin:0}
+  a{color:var(--cyan)}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--orange);outline-offset:3px;border-radius:6px}
+  img{max-width:100%;height:auto;display:block}
+  .mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+  .wrap{max-width:1180px;margin:0 auto;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
+  .band{padding-block:88px}
+  .band.alt{background:var(--deep);border-block:1px solid var(--line)}
+  .eyebrow{font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--cyan);margin-bottom:12px}
+  .lead{font-size:17px;color:var(--mute);max-width:64ch;margin-top:14px}
+  .head{margin-bottom:44px;max-width:740px}
+
+  /* NAV */
+  .nav{position:sticky;top:0;z-index:30;background:rgba(7,26,44,0.9);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:12px}
+  .brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--paper)}
+  .brand img{width:40px;height:40px;border-radius:10px}
+  .brand span{font-family:var(--f-display);font-weight:900;font-stretch:80%;font-size:23px;letter-spacing:0.03em}
+  .links{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+  .links a{color:var(--mute);text-decoration:none;font-size:14px;font-weight:600}
+  .links a:hover{color:var(--paper)}
+  .links .cta{color:var(--night);background:var(--orange);padding:8px 16px;border-radius:100px;font-weight:700}
+  .links .cta:hover{color:var(--night);background:#ff9447}
+  @media (max-width:860px){.links a:not(.cta){display:none}}
+
+  /* HERO */
+  .hero{background:radial-gradient(ellipse 900px 520px at 85% 0%,rgba(90,220,255,0.10),transparent 60%),var(--night);border-bottom:1px solid var(--line)}
+  .hero-text{padding-block:64px 36px;display:flex;flex-direction:column;gap:20px;max-width:820px}
+  .hero h1{font-size:clamp(38px,6vw,68px);font-stretch:80%}
+  .hero h1 em{font-style:normal;color:var(--cyan)}
+  .hero-text>p{font-size:18px;color:var(--mute);max-width:62ch}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chips span{font-family:var(--f-mono);font-size:13px;font-weight:600;padding:6px 11px;border-radius:6px;border:1px solid var(--line);background:rgba(7,26,44,0.6)}
+  .actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;gap:10px;padding:14px 22px;border-radius:12px;text-decoration:none;font-weight:700;font-size:15px}
+  .btn.primary{background:var(--orange);color:var(--night)}
+  .btn.primary:hover{background:#ff9447}
+  .btn.ghost{border:1px solid var(--line);color:var(--paper)}
+  .btn.ghost:hover{border-color:var(--mute)}
+  .btn small{font-weight:500;opacity:0.8}
+  .hero-photo{padding-bottom:56px}
+  .hero-photo img{width:100%;border-radius:20px;border:1px solid var(--line);box-shadow:0 30px 70px rgba(0,0,0,0.55)}
+
+  /* HOW IT WORKS */
+  .flow{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;position:relative}
+  .step{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;position:relative}
+  .step .n{font-family:var(--f-mono);color:var(--cyan);font-size:13px;font-weight:600}
+  .step h3{margin:8px 0 8px}
+  .step p{color:var(--mute);font-size:15px}
+  .step:not(:last-child)::after{content:"";position:absolute;right:-18px;top:50%;width:18px;border-top:2px dashed var(--cyan);opacity:0.7}
+  @media (max-width:900px){.flow{grid-template-columns:1fr 1fr}.step:nth-child(2)::after{display:none}}
+  @media (max-width:560px){.flow{grid-template-columns:1fr}.step::after{display:none}}
+
+  /* FEATURES */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:20px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:12px}
+  .card.big{grid-column:span 2}
+  @media (max-width:600px){.card.big{grid-column:auto}}
+  .watch{width:170px;aspect-ratio:1;border-radius:50%;margin:4px auto 6px;padding:7px;background:linear-gradient(145deg,#4a5058,#1d2126);box-shadow:0 0 0 2px #2b3036,0 14px 30px rgba(0,0,0,0.5),0 0 34px rgba(90,220,255,0.12)}
+  .watch img{width:100%;border-radius:50%}
+  .pair{display:flex;justify-content:center;gap:14px;flex-wrap:wrap}
+  .card p{color:var(--mute);font-size:15px}
+  .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--orange)}
+
+  /* SAFETY */
+  .safety{display:flex;gap:22px;align-items:flex-start;background:linear-gradient(135deg,rgba(255,82,82,0.12),rgba(255,82,82,0.03));border:1px solid rgba(255,82,82,0.35);border-radius:18px;padding:26px}
+  .safety .big{font-family:var(--f-display);font-size:34px;font-weight:900;color:var(--red);line-height:1}
+  .safety ul{margin:10px 0 0;padding-left:20px;color:var(--mute)}
+  .safety li{margin-bottom:6px}
+
+  /* PHONE */
+  .phones{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;align-items:start}
+  .phones figure{margin:0;text-align:center}
+  .phones img{max-width:250px;margin:0 auto}
+  .phones figcaption{margin-top:14px;font-size:15px;color:var(--mute)}
+  .phones figcaption b{display:block;color:var(--paper);font-size:16px;margin-bottom:4px}
+  @media (max-width:820px){.phones{grid-template-columns:1fr}}
+
+  /* TABLE */
+  table{width:100%;border-collapse:collapse;font-size:15px}
+  th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--mute);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:0.06em}
+  td:first-child{font-weight:700;white-space:nowrap}
+  td{color:var(--mute)}
+  td:first-child{color:var(--paper)}
+  .table-wrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:16px}
+  .two{display:grid;grid-template-columns:1.4fr 1fr;gap:28px;align-items:start}
+  @media (max-width:900px){.two{grid-template-columns:1fr}}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px}
+  .box ul{margin:8px 0 0;padding-left:20px;color:var(--mute)}
+  .box li{margin-bottom:6px}
+
+  /* DEMO + MANUAL */
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  @media (max-width:820px){.split{grid-template-columns:1fr}}
+  .split .box h3{margin-bottom:8px}
+  .split .box p{color:var(--mute)}
+  .split .btn{margin-top:18px}
+
+  /* FAQ */
+  details{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 20px;margin-bottom:12px}
+  summary{cursor:pointer;font-weight:700;list-style:none}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:"+";float:right;color:var(--cyan);font-weight:700}
+  details[open] summary::after{content:"–"}
+  details p{color:var(--mute);margin-top:10px}
+
+  /* DOWNLOAD + FOOTER */
+  .download{text-align:center}
+  .download h2{margin-bottom:12px}
+  .download .lead{margin:0 auto 26px}
+  .download .actions{justify-content:center}
+  footer{padding-block:36px;border-top:1px solid var(--line);color:var(--dim);font-size:14px}
+  footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  footer a{color:var(--mute)}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="img/icon.png" alt=""><span>WRISTFIX</span></a>
+    <div class="links">
+      <a href="#how">How it works</a>
+      <a href="#features">Features</a>
+      <a href="#compatibility">Compatibility</a>
+      <a href="#manual">Manual</a>
+      <a href="#faq">FAQ</a>
+      <a class="cta" href="#download">Get WRISTFIX</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div class="hero-text">
+      <h1>Your boat's instruments, <em>on your wrist.</em></h1>
+      <p>WRISTFIX brings depth, wind, AIS traffic, your anchor watch, autopilot and engine to your Wear OS watch, live from your boat's network. Keep your eyes on the water and your hands on the helm.</p>
+      <div class="chips"><span>NMEA 2000</span><span>NMEA 0183</span><span>SignalK</span><span>Wear OS</span><span>Works offline</span></div>
+      <div class="actions">
+        <a class="btn primary" href="#download">Get it on Google Play <small>· coming soon</small></a>
+        <a class="btn ghost" href="#demo">Try the demo mode</a>
+      </div>
+    </div>
+    <div class="hero-photo">
+      <img src="img/hero.webp" width="2400" height="1351" alt="A sailor at the helm looks at WRISTFIX on his watch. Around him, the watch screens for wind, plotter with AIS, autopilot and engine are linked by WiFi to the boat's instruments.">
+    </div>
+  </div>
+</header>
+
+<section class="band" id="how">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow">How it works</p>
+      <h2>From your boat's network to your wrist, in four steps.</h2>
+      <p class="lead">The phone does all the work, so the watch battery lasts. Nothing is installed on the boat: WRISTFIX uses the WiFi gateway you already have, or any standard one.</p>
+    </div>
+    <div class="flow">
+      <div class="step"><p class="n">01</p><h3>Your instruments</h3><p>Chartplotter, depth, wind, AIS, autopilot and engine share data on NMEA 2000 or NMEA 0183.</p></div>
+      <div class="step"><p class="n">02</p><h3>A WiFi gateway</h3><p>A WiFi bridge or a SignalK server puts that data on the boat's WiFi.</p></div>
+      <div class="step"><p class="n">03</p><h3>The phone app</h3><p>Finds the gateway by itself, decodes the data and runs the alarms, even with the screen off.</p></div>
+      <div class="step"><p class="n">04</p><h3>Your watch</h3><p>Eleven pages at a glance, a tile and complications, updated every second.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="band alt" id="features">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow">On the watch</p>
+      <h2>Everything you check at the helm, one swipe away.</h2>
+      <p class="lead">Swipe, turn the bezel or tap to move between pages. Each kind of value keeps its own colour on every page, and red always means an alarm.</p>
+    </div>
+    <div class="grid">
+      <article class="card big">
+        <span class="tag">Safety</span>
+        <h3>Man overboard, with one long press</h3>
+        <div class="pair">
+          <div class="watch"><img src="img/w_mob_button.webp" alt="MOB page with the large red MOB button" loading="lazy"></div>
+          <div class="watch"><img src="img/w_mob_active.webp" alt="Active MOB: distance, bearing and time since the man overboard" loading="lazy"></div>
+        </div>
+        <p>Hold the red button and WRISTFIX saves the position, then guides you back with distance, bearing and an arrow. It can also send the MOB to your chartplotters over NMEA 2000, NMEA 0183 or SignalK.</p>
+      </article>
+      <article class="card">
+        <div class="watch"><img src="img/w_instruments.webp" alt="Instruments page: depth, SOG, STW, COG and heading" loading="lazy"></div>
+        <h3>Instruments</h3>
+        <p>Depth in large figures, speed over ground and through water, course and heading. Shallow water turns it red.</p>
+      </article>
+      <article class="card">
+        <div class="watch"><img src="img/w_plotter.webp" alt="Plotter with chart, track and AIS targets" loading="lazy"></div>
+        <h3>Plotter with AIS</h3>
+        <p>Your boat, track and course on a chart, with every AIS ship around you and a collision warning based on CPA.</p>
+      </article>
+      <article class="card">
+        <div class="watch"><img src="img/w_ais_card.webp" alt="AIS details card of a ship" loading="lazy"></div>
+        <h3>Tap a ship</h3>
+        <p>Name, type, MMSI, call sign, course, speed, CPA, destination and size, just like on a chartplotter.</p>
+      </article>
+      <article class="card big">
+        <span class="tag">Sleep well</span>
+        <h3>Anchor alarm on your wrist and your phone</h3>
+        <div class="pair">
+          <div class="watch"><img src="img/w_anchor.webp" alt="Anchor holding inside the swing circle" loading="lazy"></div>
+          <div class="watch"><img src="img/w_anchor_alarm.webp" alt="Anchor dragging alarm" loading="lazy"></div>
+        </div>
+        <p>Drop the anchor with a long press and choose the swing radius. If the boat drags or the GPS is lost, the watch vibrates and the phone sounds an alarm, every minute until you act.</p>
+      </article>
+      <article class="card">
+        <div class="watch"><img src="img/w_wind.webp" alt="Wind dial with apparent and true wind" loading="lazy"></div>
+        <h3>Wind</h3>
+        <p>Apparent and true wind on a dial with close-hauled sectors, plus the strongest gust of the last ten minutes.</p>
+      </article>
+      <article class="card">
+        <div class="watch"><img src="img/w_weather.webp" alt="Weather page with pressure trend and barograph" loading="lazy"></div>
+        <h3>Weather</h3>
+        <p>Barometric pressure with a 3-hour trend and barograph, and a warning when it falls fast.</p>
+      </article>
+      <article class="card">
+        <div class="watch"><img src="img/w_waypoint.webp" alt="Waypoint page with distance, bearing, VMG, ETA and cross-track error" loading="lazy"></div>
+        <h3>Waypoint</h3>
+        <p>Distance, bearing, VMG and ETA to the next waypoint of your route, with the cross-track error.</p>
+      </article>
+      <article class="card">
+        <div class="watch"><img src="img/w_autopilot.webp" alt="Autopilot controls on the watch" loading="lazy"></div>
+        <h3>Autopilot control</h3>
+        <p>Engage, standby, ±1° and ±10°, and tack, for Raymarine Evolution, Simrad, B&amp;G and SignalK pilots. Optional.</p>
+      </article>
+      <article class="card">
+        <div class="watch"><img src="img/w_engine.webp" alt="Engine page with RPM, coolant, oil pressure, alternator, fuel rate and hours" loading="lazy"></div>
+        <h3>Engine</h3>
+        <p>RPM, coolant temperature, oil pressure, alternator, fuel rate and engine hours, with alarms.</p>
+      </article>
+      <article class="card">
+        <div class="watch"><img src="img/w_tanks.webp" alt="Tank levels with names and litres" loading="lazy"></div>
+        <h3>Tanks</h3>
+        <p>Fuel, water and holding tanks with your own names and the litres or gallons left.</p>
+      </article>
+      <article class="card">
+        <div class="watch"><img src="img/w_batteries.webp" alt="Battery banks with voltage and charge" loading="lazy"></div>
+        <h3>Batteries</h3>
+        <p>Voltage and charge of each battery bank, named your way, with a low-battery alarm.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <div class="safety">
+      <div class="big">!</div>
+      <div>
+        <h3>Designed as a navigation aid, with safety first</h3>
+        <ul>
+          <li><b>The MOB function never sends any command to the autopilot.</b> Steering back to the person in the water is always the skipper's decision.</li>
+          <li>Sending data to the boat and autopilot control are off by default, and you confirm a warning before enabling them.</li>
+          <li>Every page shows when its data is missing or stale.</li>
+          <li>WRISTFIX does not replace the vessel's own instruments, a proper lookout or good seamanship.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band alt" id="phone">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow">On the phone</p>
+      <h2>Set it up once. No IP addresses to type.</h2>
+      <p class="lead">The phone app connects to the boat, runs the alarms in the background and keeps your watch up to date.</p>
+    </div>
+    <div class="phones">
+      <figure><img src="img/p_search.webp" alt="Connection tab with the bridge found automatically" loading="lazy"><figcaption><b>Finds your bridge</b>Tap search and WRISTFIX finds the gateway or SignalK server on the boat's WiFi, and its data format.</figcaption></figure>
+      <figure><img src="img/p_live_data_1.webp" alt="Live data tab with all received values" loading="lazy"><figcaption><b>Everything it receives</b>Check every value, and name your tanks and battery banks.</figcaption></figure>
+      <figure><img src="img/p_offline_map.webp" alt="Offline map tab with a saved area" loading="lazy"><figcaption><b>Charts without coverage</b>Download the area around the boat before leaving port.</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="compatibility">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow">Compatibility</p>
+      <h2>Works with the gateway you already have.</h2>
+      <p class="lead">Choose the format in your gateway's settings, or let WRISTFIX detect it.</p>
+    </div>
+    <div class="two">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Format</th><th>Typical devices</th></tr></thead>
+          <tbody>
+            <tr><td>Yacht Devices RAW</td><td>Yacht Devices YDWG-02, YDEN-02 and similar NMEA 2000 gateways</td></tr>
+            <tr><td>Actisense N2K ASCII</td><td>Actisense W2K-1 and compatible gateways</td></tr>
+            <tr><td>SeaSmart $PCDIN</td><td>SeaSmart / Chetco and some Digital Yacht gateways</td></tr>
+            <tr><td>SignalK</td><td>SignalK server on a Raspberry Pi or OpenPlotter, Victron Cerbo GX with SignalK</td></tr>
+            <tr><td>NMEA 0183</td><td>Any NMEA 0183 WiFi multiplexer, AIS transponders with WiFi</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="box">
+        <h3>You need</h3>
+        <ul>
+          <li>An Android phone, Android 8.0 or later</li>
+          <li>A Wear OS watch, Wear OS 3 or later: Samsung Galaxy Watch 4 and newer, Galaxy Watch Ultra, Google Pixel Watch…</li>
+          <li>A WiFi gateway or SignalK server on board</li>
+        </ul>
+        <h3 style="margin-top:18px">Internet</h3>
+        <ul>
+          <li>Not needed at sea. Only to download charts.</li>
+          <li>With Starlink or a 4G router, the phone keeps its internet while connected to the boat.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band alt">
+  <div class="wrap">
+    <div class="split">
+      <div class="box" id="demo">
+        <p class="eyebrow">Demo mode</p>
+        <h3>Try it at home, without a boat</h3>
+        <p>Turn on demo mode and a simulated boat sails in the Bay of Palma, with wind, depth, a route, engine, tanks, batteries, three AIS ships (one on a collision course) and an autopilot you can steer from the watch.</p>
+      </div>
+      <div class="box" id="manual">
+        <p class="eyebrow">User manual</p>
+        <h3>Every function, step by step</h3>
+        <p>Installation, connecting to your boat, each watch page, man overboard, anchor alarm, autopilot control, offline charts and troubleshooting.</p>
+        <a class="btn ghost" href="manual.pdf">Download the manual <small>· PDF, English</small></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="faq">
+  <div class="wrap">
+    <div class="head"><p class="eyebrow">FAQ</p><h2>Questions sailors ask.</h2></div>
+    <details><summary>Does it work with an iPhone or an Apple Watch?</summary><p>No. WRISTFIX needs an Android phone and a Wear OS watch paired with it.</p></details>
+    <details><summary>Does the watch work without the phone?</summary><p>No. The phone connects to the boat and sends the data to the watch, so it must stay on board within Bluetooth range.</p></details>
+    <details><summary>Do I need to change anything on my boat?</summary><p>Only if you have no WiFi gateway. Any of the gateways in the compatibility table, or a SignalK server, is enough.</p></details>
+    <details><summary>Will I lose internet on my phone?</summary><p>No. If the gateway's WiFi has no internet, Android keeps using mobile data for everything else, and WRISTFIX downloads charts over it. With a router on board, the phone has internet over WiFi.</p></details>
+    <details><summary>Can it steer my boat?</summary><p>Only if you enable autopilot control and confirm the warning. It sends the same commands as your pilot's own control head. The man overboard function never sends commands to the autopilot.</p></details>
+    <details><summary>Is the chart suitable for navigation?</summary><p>No. The watch chart is drawn from OpenStreetMap, OpenFreeMap and OpenSeaMap data to help you see where you are. It is not an official nautical chart.</p></details>
+    <details><summary>What data does WRISTFIX collect?</summary><p>None. Your boat's data stays on your phone and watch. Read the <a href="privacy.html">privacy policy</a>.</p></details>
+  </div>
+</section>
+
+<section class="band alt download" id="download">
+  <div class="wrap">
+    <h2>Coming soon to Google Play</h2>
+    <p class="lead">WRISTFIX is in final testing. One app for your phone and your Wear OS watch.</p>
+    <div class="actions">
+      <a class="btn primary" href="mailto:delrosalr@gmail.com?subject=WRISTFIX">Tell me when it's ready</a>
+      <a class="btn ghost" href="manual.pdf">Read the manual</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 RDRP Studio · WRISTFIX is a navigation aid, not a substitute for the vessel's instruments or seamanship.</span>
+    <span><a href="privacy.html">Privacy</a> · <a href="mailto:delrosalr@gmail.com">delrosalr@gmail.com</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
